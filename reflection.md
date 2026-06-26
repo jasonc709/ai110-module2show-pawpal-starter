@@ -3,9 +3,11 @@
 ## 1. System Design
 
 **a. Initial design**
+Three core actions a user should be able to perform: Add a pet with basic details like name, species, and age, schedule care tasks such as feeding, walks, medication, or appointments, view today's tasks in time order so the owner knows what needs attention next.
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+My initial UML design includes four main classes: Owner, Pet, Task, and Scheduler. The Owner class represents the person using the app and stores a list of pets. The Pet class stores basic pet information and a list of that pet's care tasks. The Task class represents one care activity, including its description, time, frequency, and priorty status. The Scheduler class organizes tasks across all pets so the app can show a clear schedule, sort tasks by time, and later detect conflicts.
 
 **b. Design changes**
 
