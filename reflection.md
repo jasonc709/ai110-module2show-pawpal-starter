@@ -22,12 +22,15 @@ I made the Scheduler read tasks from the Owner's pets instead of keeping its own
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
+My scheduler mainly considers task time, pet ownership, completion status, frequency, and basic conflicts. I prioritized time first because pet owners need to know what task comes next during the day. I also prioritized pet name and completion status because those filters make the schedule easier to read when there are multiple pets or many tasks. Conflict detection matters because two tasks at the same exact time could be hard for one owner to handle.
+
+
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
-
+One tradeoff my scheduler makes is that conflict detection only checks for exact matching start times. For example, it catches two tasks both scheduled at 08:00, but it does not catch an 08:00 task that lasts 30 minutes overlapping with an 08:15 task. This is reasonable for this project because it keeps the logic lightweight and easy to understand while still warning the user about the clearest scheduling conflicts.
 ---
 
 ## 3. AI Collaboration

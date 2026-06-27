@@ -79,14 +79,14 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+The Scheduler class gathers tasks live from the owner's pets (single source of truth) and adds the logic below.
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | Scheduler.sort_by_time() | Returns a new list sorted chronologically by each task's scheduled_time, using Python's sorted() with a lambda key. |
+| Filtering | Scheduler.filter_by_pet(pet_name), Scheduler.filter_by_status(completed) | Filter tasks across all pets by pet name or by completion status (True/False). Each returns a new list. |
+| Conflict handling | Scheduler.detect_conflicts() | Groups tasks by start time and returns readable warning strings (not exceptions) when 2 or more tasks share the same time. Lightweight: exact start-time match only, not duration overlap. |
+| Recurring tasks | Scheduler.mark_task_complete(task) | Marks a task done and auto-creates the next occurrence on the same pet — due_date + 1 day (daily) or + 7 days (weekly) via timedelta. ONCE tasks do not recur. |
 
 ## 📸 Demo Walkthrough
 
