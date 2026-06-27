@@ -1,0 +1,64 @@
+classDiagram
+    %% PawPal+ final class diagram — matches pawpal_system.py
+    %% Core classes: Owner, Pet, Task, Scheduler (+ Frequency enum)
+
+    class Frequency {
+        <<enumeration>>
+        ONCE
+        DAILY
+        WEEKLY
+    }
+
+    class Owner {
+        +str name
+        +list~Pet~ pets
+        +float available_hours
+        +add_pet(pet: Pet) None
+        +remove_pet(pet_id: int) None
+        +get_all_tasks() list~Task~
+    }
+
+    class Pet {
+        +int id
+        +str name
+        +str species
+        +int age
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +remove_task(task_id: int) None
+        +get_tasks() list~Task~
+    }
+
+    class Task {
+        +int id
+        +str description
+        +time scheduled_time
+        +int duration_minutes
+        +Frequency frequency
+        +str priority
+        +str pet_name
+        +date due_date
+        +bool completed
+        +mark_complete() None
+        +reset() None
+        +is_high_priority() bool
+    }
+
+    class Scheduler {
+        +Owner owner
+        +collect_tasks() list~Task~
+        +sort_by_time() list~Task~
+        +get_today_schedule() list~Task~
+        +filter_by_pet(pet_name: str) list~Task~
+        +filter_by_status(completed: bool) list~Task~
+        +mark_task_complete(task: Task) Task
+        +generate_schedule() tuple
+        +detect_conflicts() list~str~
+        +explain_plan(scheduled, skipped) str
+    }
+
+    Owner "1" --> "*" Pet : owns
+    Pet "1" --> "*" Task : has
+    Task ..> Frequency : uses
+    Scheduler --> Owner : plans for
+    Scheduler ..> Task : creates next occurrence

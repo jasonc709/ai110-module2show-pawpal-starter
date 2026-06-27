@@ -141,18 +141,23 @@ if st.button("Generate schedule"):
     scheduler = Scheduler(owner)
     scheduled, skipped = scheduler.generate_schedule()
 
+    # Sorted schedule of the tasks that fit.
     if scheduled:
         st.write(f"Scheduled (fits {available_hours} h available):")
         st.table(schedule_rows(scheduled))
     else:
         st.info("No tasks fit in the available time. Add tasks or increase your hours.")
 
-    # Skipped low-priority tasks go in a warning-colored box.
+    # Conflict warnings shown right under the schedule so they're easy to notice.
+    conflicts = scheduler.detect_conflicts()
+    for warning in conflicts:
+        st.warning(warning)
+
+    # Skipped tasks kept in their own clearly labeled, warning-colored section.
     if skipped:
+        st.subheader("Tasks Not Scheduled Because of Limited Time")
         skipped_lines = "\n".join(
             f"- {t.description} ({t.pet_name}, {t.priority}, {t.duration_minutes} min)"
             for t in skipped
         )
-        st.warning(
-            "Not enough time for these lower-priority tasks:\n" + skipped_lines
-        )
+        st.warning("These lower-priority tasks did not fit today:\n" + skipped_lines)

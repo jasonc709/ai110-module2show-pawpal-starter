@@ -22,6 +22,25 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## ✨ Features
+
+PawPal+ lets one owner manage several pets and their care tasks, then builds a daily plan that respects the owner's available time and each task's priority.
+
+**Managing pets and tasks**
+
+- Add one or more pets (name, species, age) under a single owner.
+- Add care tasks to a pet with a description, time, duration (minutes), priority (low/medium/high), and frequency (once/daily/weekly).
+- Mark tasks complete (and reset them back to incomplete).
+
+**Scheduling algorithms** (all in the `Scheduler` class)
+
+- **Sort tasks by time** — `sort_by_time()` returns the tasks in chronological order, so the schedule reads top-to-bottom by start time.
+- **Filter tasks** — `filter_by_pet(name)` returns only one pet's tasks, and `filter_by_status(completed)` returns only completed or only incomplete tasks.
+- **Recurring daily/weekly tasks** — completing a task with `mark_task_complete()` automatically creates the next occurrence on the same pet: one day later for daily tasks, seven days later for weekly. One-time (`once`) tasks do not recur.
+- **Conflict warnings** — `detect_conflicts()` returns readable warning messages when two or more tasks (across any pets) are scheduled at the exact same start time. It warns instead of crashing. (This is a lightweight check: it compares start times only, not overlapping durations.)
+- **Available-hours scheduling** — the owner sets how many hours they have today, and `generate_schedule()` fits tasks into that time, choosing higher-priority tasks first (ties broken by earlier start time). It is a simple greedy approach, not a guaranteed-optimal packing.
+- **Skipped tasks** — any tasks that do not fit in the available time are returned in a separate "skipped" list instead of the schedule, and `explain_plan()` summarizes which tasks were included or skipped and why.
+
 ## Getting started
 
 ### Setup
@@ -87,16 +106,43 @@ The Scheduler class gathers tasks live from the owner's pets (single source of t
 | Filtering | Scheduler.filter_by_pet(pet_name), Scheduler.filter_by_status(completed) | Filter tasks across all pets by pet name or by completion status (True/False). Each returns a new list. |
 | Conflict handling | Scheduler.detect_conflicts() | Groups tasks by start time and returns readable warning strings (not exceptions) when 2 or more tasks share the same time. Lightweight: exact start-time match only, not duration overlap. |
 | Recurring tasks | Scheduler.mark_task_complete(task) | Marks a task done and auto-creates the next occurrence on the same pet — due_date + 1 day (daily) or + 7 days (weekly) via timedelta. ONCE tasks do not recur. |
+| Available-hours scheduling | Scheduler.generate_schedule() | Converts the owner's available_hours to minutes, picks higher-priority tasks first (ties broken by earlier time), includes the tasks that fit, and returns (scheduled, skipped). Greedy, not guaranteed-optimal. |
+| Skipped tasks + explanation | Scheduler.explain_plan(scheduled, skipped) | Lists which tasks were included or skipped and why. In the UI, skipped tasks appear in a separate warning-colored section. |
 
 ## 📸 Demo Walkthrough
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. Add a pet (name, species, age) in the "Add a Pet" section — a success message confirms it and it appears in the pet table.
+2. Schedule a task for that pet (title, time, duration, priority, frequency) in the "Schedule a Task" section.
+3. Set "Hours available today," then click "Generate schedule" to see today's plan in sorted time order.
+4. If two tasks share the same time, a conflict warning appears near the schedule.
+5. If tasks don't fit your available hours, lower-priority ones are skipped into a separate warning section.
+
+**Sample CLI output** (`python main.py`):
+
+```text
+Today's Schedule (sorted by time)
+========================================
+07:30  |  Mochi   |  Feed breakfast (10 min, high priority) [done]
+08:00  |  Mochi   |  Playtime (15 min, low priority) [todo]
+08:00  |  Rex     |  Morning walk (30 min, high priority) [todo]
+12:00  |  Mochi   |  Give medication (5 min, medium priority) [todo]
+========================================
+
+Conflict check
+========================================
+WARNING: Conflict at 08:00: Playtime (Mochi), Morning walk (Rex)
+========================================
+
+Limited availability demo (Sam has 0.75 h = 45 min today)
+Scheduled (fits the available time)
+  07:00  Long walk (high, 30 min)
+  09:00  Vet meds (high, 10 min)
+  18:00  Brush coat (medium, 5 min)
+Skipped (not enough time)
+  17:00  Fetch game (low, 20 min)
+```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
 
