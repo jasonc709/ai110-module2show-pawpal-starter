@@ -74,3 +74,38 @@ def test_once_task_does_not_recur():
     assert task.completed is True            # still marked complete
     assert next_task is None                 # but nothing new returned
     assert len(pet.get_tasks()) == 1         # no extra task added
+
+
+def test_sort_by_time_returns_chronological_order():
+    """sort_by_time() should return tasks in time order even when added out of order."""
+    owner = Owner("Jordan")
+    pet = Pet("Mochi", "cat", 3)
+    owner.add_pet(pet)
+
+    # Added OUT OF ORDER on purpose: 12:00, then 7:30, then 9:15.
+    pet.add_task(Task("Lunch", time(12, 0), 10, Frequency.DAILY, "medium", pet_name="Mochi"))
+    pet.add_task(Task("Breakfast", time(7, 30), 10, Frequency.DAILY, "high", pet_name="Mochi"))
+    pet.add_task(Task("Walk", time(9, 15), 20, Frequency.DAILY, "low", pet_name="Mochi"))
+    scheduler = Scheduler(owner)
+
+    ordered_times = [task.scheduled_time for task in scheduler.sort_by_time()]
+
+    assert ordered_times == [time(7, 30), time(9, 15), time(12, 0)]  # chronological
+
+
+def test_detect_conflicts_flags_same_time():
+    """Two tasks at the same time (across pets) should produce at least one warning."""
+    owner = Owner("Jordan")
+    mochi = Pet("Mochi", "cat", 3)
+    rex = Pet("Rex", "dog", 5)
+    owner.add_pet(mochi)
+    owner.add_pet(rex)
+
+    # Both scheduled at 08:00 -> a conflict.
+    mochi.add_task(Task("Playtime", time(8, 0), 15, Frequency.DAILY, "low", pet_name="Mochi"))
+    rex.add_task(Task("Morning walk", time(8, 0), 30, Frequency.DAILY, "high", pet_name="Rex"))
+    scheduler = Scheduler(owner)
+
+    conflicts = scheduler.detect_conflicts()
+
+    assert len(conflicts) >= 1  # at least one warning returned

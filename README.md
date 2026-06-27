@@ -99,3 +99,20 @@ Describe your app in numbered steps so a reader can follow along without watchin
 5. <!-- Add more steps as needed -->
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+
+
+ "Testing PawPal+"
+ python -m pytest
+ The test suite covers the four scheduler algorithms, chronological sorting, daily and weekly recurrence, same-time conflict detection, and core task and pet behaviors like marking complete and adding tasks.
+ ======================================================================= test session starts ========================================================================
+platform darwin -- Python 3.13.13, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/jasonchen/Documents/PawPalProject/ai110-module2show-pawpal-starter
+plugins: anyio-4.14.1
+collected 7 items                                                                                                                                                  
+
+tests/test_pawpal.py .......                                                                                                                                 [100%]
+
+======================================================================== 7 passed in 0.02s =========================================================================
+Confidence level 5
+
+
