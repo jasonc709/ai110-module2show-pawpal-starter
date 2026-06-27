@@ -13,7 +13,7 @@ My initial UML design includes four main classes: Owner, Pet, Task, and Schedule
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
-
+I made the Scheduler read tasks from the Owner's pets instead of keeping its own separate list, so there's a single source of truth, and I added unique id fields plus a pet_name link on Task so tasks can be told apart and traced back to their pet.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

@@ -1,7 +1,22 @@
-"""PawPal+ system classes — skeletons based on diagrams/uml.mmd."""
+"""PawPal+ system classes — core implementation based on diagrams/uml.mmd."""
 
 from dataclasses import dataclass, field
 from datetime import date, time
+from enum import Enum
+from itertools import count
+
+# Auto-incrementing id generators so tasks/pets can be told apart even when
+# their other fields are identical.
+_task_ids = count(1)
+_pet_ids = count(1)
+
+
+class Frequency(Enum):
+    """Fixed set of allowed recurrence values for a task (avoids parsing free text)."""
+
+    ONCE = "once"
+    DAILY = "daily"
+    WEEKLY = "weekly"
 
 
 @dataclass
@@ -11,17 +26,23 @@ class Task:
     description: str
     scheduled_time: time
     duration_minutes: int
-    frequency: str
+    frequency: Frequency
     priority: str
+    pet_name: str = ""
     completed: bool = False
+    id: int = field(default_factory=lambda: next(_task_ids))
 
-    def mark_done(self) -> None:
-        """Mark this task as completed."""
-        pass
+    def mark_complete(self) -> None:
+        """Set this task's completed status to True."""
+        self.completed = True
+
+    def reset(self) -> None:
+        """Set this task's completed status back to False."""
+        self.completed = False
 
     def is_high_priority(self) -> bool:
-        """Return True if this task is high priority."""
-        pass
+        """Return True if this task's priority is 'high'."""
+        return self.priority == "high"
 
 
 @dataclass
@@ -32,18 +53,19 @@ class Pet:
     species: str
     age: int
     tasks: list[Task] = field(default_factory=list)
+    id: int = field(default_factory=lambda: next(_pet_ids))
 
     def add_task(self, task: Task) -> None:
         """Add a care task for this pet."""
-        pass
+        self.tasks.append(task)
 
-    def remove_task(self, task: Task) -> None:
-        """Remove a care task from this pet."""
-        pass
+    def remove_task(self, task_id: int) -> None:
+        """Remove this pet's task matching the given id."""
+        self.tasks = [task for task in self.tasks if task.id != task_id]
 
-    def list_tasks(self) -> list[Task]:
+    def get_tasks(self) -> list[Task]:
         """Return this pet's care tasks."""
-        pass
+        return self.tasks
 
 
 @dataclass
@@ -55,44 +77,47 @@ class Owner:
 
     def add_pet(self, pet: Pet) -> None:
         """Add a pet to this owner."""
-        pass
+        self.pets.append(pet)
 
-    def remove_pet(self, pet: Pet) -> None:
-        """Remove a pet from this owner."""
-        pass
+    def remove_pet(self, pet_id: int) -> None:
+        """Remove the pet matching the given id."""
+        self.pets = [pet for pet in self.pets if pet.id != pet_id]
 
-    def list_pets(self) -> list[Pet]:
-        """Return this owner's pets."""
-        pass
+    def get_all_tasks(self) -> list[Task]:
+        """Return every task gathered from all of this owner's pets."""
+        all_tasks = []
+        for pet in self.pets:
+            all_tasks.extend(pet.get_tasks())
+        return all_tasks
 
 
 class Scheduler:
-    """Organizes tasks across all pets into a sorted, conflict-aware schedule."""
+    """Organizes tasks across all of an owner's pets into a sorted schedule."""
 
-    def __init__(self) -> None:
-        """Initialize the scheduler with an empty task list."""
-        self.tasks: list[Task] = []
+    def __init__(self, owner: Owner) -> None:
+        """Initialize the scheduler for an owner (the single source of task data)."""
+        self.owner = owner
 
-    def add_task(self, task: Task) -> None:
-        """Add a task to the scheduler."""
-        pass
-
-    def build_schedule(self, day: date) -> list[Task]:
-        """Build the ordered schedule of tasks for a given day."""
-        pass
+    def collect_tasks(self) -> list[Task]:
+        """Gather every task across the owner's pets into one list."""
+        return self.owner.get_all_tasks()
 
     def sort_by_time(self) -> list[Task]:
-        """Return tasks sorted by scheduled time."""
-        pass
+        """Return all tasks sorted by their scheduled time."""
+        return sorted(self.collect_tasks(), key=lambda task: task.scheduled_time)
 
-    def view_today(self) -> list[Task]:
+    def get_today_schedule(self) -> list[Task]:
         """Return today's tasks in time order."""
+        return self.sort_by_time()
+
+    def build_schedule(self, day: date) -> list[Task]:
+        """Build the ordered schedule of tasks for a given day (not implemented yet)."""
         pass
 
-    def detect_conflicts(self) -> list[Task]:
-        """Return tasks that overlap or conflict in time."""
+    def detect_conflicts(self) -> list[tuple[Task, Task]]:
+        """Return pairs of tasks that overlap in time (not implemented yet)."""
         pass
 
     def explain_plan(self) -> str:
-        """Return a human-readable explanation of why tasks were chosen and ordered."""
+        """Return a human-readable explanation of the plan (not implemented yet)."""
         pass
