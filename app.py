@@ -108,23 +108,51 @@ else:
 st.divider()
 
 st.subheader("Today's Schedule")
-st.caption("Gathers every pet's tasks through the Scheduler and sorts them by time.")
+st.caption("Fits tasks into your available hours, choosing higher-priority tasks first.")
+
+# Owner preference: how many hours are available today. The widget's key stores
+# the value in st.session_state, so it persists across reruns/button clicks.
+available_hours = st.number_input(
+    "Hours available today",
+    min_value=0.0,
+    max_value=24.0,
+    value=float(owner.available_hours),
+    step=0.5,
+    key="available_hours",
+)
+
+
+def schedule_rows(tasks):
+    """Turn Task objects into rows for st.table."""
+    return [
+        {
+            "time": t.scheduled_time.strftime("%H:%M"),
+            "pet": t.pet_name,
+            "task": t.description,
+            "duration (min)": t.duration_minutes,
+            "priority": t.priority,
+        }
+        for t in tasks
+    ]
+
 
 if st.button("Generate schedule"):
+    owner.available_hours = available_hours  # apply the constraint
     scheduler = Scheduler(owner)
-    schedule = scheduler.get_today_schedule()
-    if schedule:
-        st.table(
-            [
-                {
-                    "time": t.scheduled_time.strftime("%H:%M"),
-                    "pet": t.pet_name,
-                    "task": t.description,
-                    "duration (min)": t.duration_minutes,
-                    "priority": t.priority,
-                }
-                for t in schedule
-            ]
-        )
+    scheduled, skipped = scheduler.generate_schedule()
+
+    if scheduled:
+        st.write(f"Scheduled (fits {available_hours} h available):")
+        st.table(schedule_rows(scheduled))
     else:
-        st.info("No tasks scheduled yet. Add some tasks above.")
+        st.info("No tasks fit in the available time. Add tasks or increase your hours.")
+
+    # Skipped low-priority tasks go in a warning-colored box.
+    if skipped:
+        skipped_lines = "\n".join(
+            f"- {t.description} ({t.pet_name}, {t.priority}, {t.duration_minutes} min)"
+            for t in skipped
+        )
+        st.warning(
+            "Not enough time for these lower-priority tasks:\n" + skipped_lines
+        )

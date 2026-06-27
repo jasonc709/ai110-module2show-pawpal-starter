@@ -88,6 +88,24 @@ def main():
         )
     print()
 
+    # Limited availability: only the tasks that fit get scheduled; the rest are skipped.
+    print("Limited availability demo (Sam has 0.75 h = 45 min today)")
+    print("=" * 40)
+    sam = Owner("Sam", available_hours=0.75)
+    buddy = Pet("Buddy", "dog", 2)
+    sam.add_pet(buddy)
+    buddy.add_task(Task("Long walk", time(7, 0), 30, Frequency.DAILY, "high", pet_name="Buddy"))
+    buddy.add_task(Task("Vet meds", time(9, 0), 10, Frequency.DAILY, "high", pet_name="Buddy"))
+    buddy.add_task(Task("Brush coat", time(18, 0), 5, Frequency.WEEKLY, "medium", pet_name="Buddy"))
+    buddy.add_task(Task("Fetch game", time(17, 0), 20, Frequency.DAILY, "low", pet_name="Buddy"))
+
+    sam_scheduler = Scheduler(sam)
+    scheduled, skipped = sam_scheduler.generate_schedule()
+
+    print_tasks("Scheduled (fits the available time)", scheduled)
+    print_tasks("Skipped (not enough time)", skipped)
+    print(sam_scheduler.explain_plan(scheduled, skipped))
+
 
 if __name__ == "__main__":
     main()

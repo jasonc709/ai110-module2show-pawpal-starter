@@ -75,6 +75,7 @@ class Owner:
 
     name: str
     pets: list[Pet] = field(default_factory=list)
+    available_hours: float = 24.0  # how many hours the owner has for tasks today
 
     def add_pet(self, pet: Pet) -> None:
         """Add a pet to this owner."""
@@ -143,9 +144,50 @@ class Scheduler:
                 return next_task
         return None
 
-    def build_schedule(self, day: date) -> list[Task]:
-        """Build the ordered schedule of tasks for a given day (not implemented yet)."""
-        pass
+    def generate_schedule(self) -> tuple[list[Task], list[Task]]:
+        """Build a schedule that fits the owner's available hours.
+
+        Higher-priority tasks are chosen first (ties broken by scheduled time).
+        A task is included if it fits in the remaining minutes, otherwise it is
+        skipped. Returns (scheduled_tasks, skipped_tasks).
+        """
+        available_minutes = self.owner.available_hours * 60
+        # Lower number = chosen first. Unknown priorities go last.
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        tasks = sorted(
+            self.collect_tasks(),
+            key=lambda t: (priority_order.get(t.priority, 99), t.scheduled_time),
+        )
+
+        scheduled = []
+        skipped = []
+        remaining = available_minutes
+        for task in tasks:
+            if task.duration_minutes <= remaining:
+                scheduled.append(task)
+                remaining -= task.duration_minutes
+            else:
+                skipped.append(task)
+
+        # Show the kept tasks as a normal time-ordered schedule.
+        scheduled.sort(key=lambda t: t.scheduled_time)
+        return scheduled, skipped
+
+    def explain_plan(self, scheduled: list[Task], skipped: list[Task]) -> str:
+        """Return a readable explanation of which tasks were included or skipped."""
+        minutes = int(self.owner.available_hours * 60)
+        lines = [f"Available time: {self.owner.available_hours} h ({minutes} min)"]
+        for task in scheduled:
+            lines.append(
+                f"INCLUDED: {task.description} "
+                f"({task.priority}, {task.duration_minutes} min) - it fit the remaining time"
+            )
+        for task in skipped:
+            lines.append(
+                f"SKIPPED: {task.description} "
+                f"({task.priority}, {task.duration_minutes} min) - not enough time left"
+            )
+        return "\n".join(lines)
 
     def detect_conflicts(self) -> list[str]:
         """Return warning strings for tasks (across all pets) that share the same time."""
@@ -159,7 +201,3 @@ class Scheduler:
                 labels = ", ".join(f"{t.description} ({t.pet_name})" for t in group)
                 warnings.append(f"Conflict at {clock}: {labels}")
         return warnings
-
-    def explain_plan(self) -> str:
-        """Return a human-readable explanation of the plan (not implemented yet)."""
-        pass

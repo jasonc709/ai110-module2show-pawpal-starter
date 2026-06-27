@@ -109,3 +109,24 @@ def test_detect_conflicts_flags_same_time():
     conflicts = scheduler.detect_conflicts()
 
     assert len(conflicts) >= 1  # at least one warning returned
+
+
+def test_generate_schedule_respects_available_time():
+    """Tasks beyond the available time are skipped, lower priority first."""
+    owner = Owner("Jordan", available_hours=0.5)  # 0.5 h = 30 minutes
+    pet = Pet("Mochi", "cat", 3)
+    owner.add_pet(pet)
+
+    # 20 (high) + 20 (low) = 40 min, which is more than the 30 available.
+    pet.add_task(Task("Walk", time(8, 0), 20, Frequency.DAILY, "high", pet_name="Mochi"))
+    pet.add_task(Task("Play", time(9, 0), 20, Frequency.DAILY, "low", pet_name="Mochi"))
+    scheduler = Scheduler(owner)
+
+    scheduled, skipped = scheduler.generate_schedule()
+
+    scheduled_names = [t.description for t in scheduled]
+    skipped_names = [t.description for t in skipped]
+
+    assert "Walk" in scheduled_names                          # high priority fits
+    assert "Play" in skipped_names                            # low priority doesn't
+    assert sum(t.duration_minutes for t in scheduled) <= 30   # stays within budget
